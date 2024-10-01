@@ -1,0 +1,38 @@
+.ai-analysis-results {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  
+  .ai-analysis-results h2 {
+    color: #343a40;
+    margin-bottom: 20px;
+  }
+  
+  .entity-group {
+    margin-bottom: 20px;
+  }
+  
+  .entity-group h3 {
+    color: #495057;
+    margin-bottom: 10px;
+  }
+  
+  .entity-group ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .entity-group li {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 5px;
+  }
+  
+  .entity-group li strong {
+    color: #007bff;
+  }

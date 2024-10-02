@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/AIAnalysisResults.css';
 
-const AIAnalysisResults = ({ analysis }) => {
+const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) => {
   const renderTraits = (traits) => (
     <ul>
       {traits.map((trait, index) => (
@@ -53,13 +53,25 @@ const AIAnalysisResults = ({ analysis }) => {
   return (
     <div className="ai-analysis-results">
       <h2>AI Analysis Results</h2>
+      {translated && (
+        <div className="translation-results">
+          <h3>Translated Information</h3>
+          <p><strong>Chief Complaint:</strong> {translated.chiefComplaint}</p>
+          <p><strong>Symptoms:</strong> {translated.symptoms}</p>
+          <p><strong>Medical History:</strong> {translated.medicalHistory}</p>
+        </div>
+      )}
       {renderEntities(analysis.medicalConditions, "Medical Conditions")}
       {renderEntities(analysis.medications, "Medications")}
       {renderEntities(analysis.tests, "Tests")}
       {renderEntities(analysis.anatomy, "Anatomy")}
       {renderEntities(analysis.timeExpressions, "Time Expressions")}
-      {renderEntities(analysis.protectedHealthInformation, "Protected Health Information")}
-      {renderEntities(analysis.behavioralEnvironmentalSocial, "Behavioral, Environmental, Social")}
+      {diagnosticRecommendations && (
+        <div className="diagnostic-recommendations">
+          <h3>Diagnostic Recommendations</h3>
+          <p>{diagnosticRecommendations}</p>
+        </div>
+      )}
     </div>
   );
 };

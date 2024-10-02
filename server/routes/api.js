@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Patient = require('../models/Patient');
 const { ComprehendMedicalClient, DetectEntitiesV2Command } = require("@aws-sdk/client-comprehendmedical");
+const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 
 console.log('AWS Access Key ID:', process.env.AWS_ACCESS_KEY_ID ? 'Set' : 'Not set');
 console.log('AWS Secret Access Key:', process.env.AWS_SECRET_ACCESS_KEY ? 'Set' : 'Not set');
@@ -14,16 +16,58 @@ const client = new ComprehendMedicalClient({
   },
 });
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OpenAI API key is missing. Please set OPENAI_API_KEY in your environment variables.');
+  process.exit(1);
+}
+
+async function translateToEnglish(text) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a medical translator. Translate the following text to English:" },
+      { role: "user", content: text }
+    ],
+  });
+  return response.choices[0].message.content.trim();
+}
+
+async function getDiagnosticRecommendations(symptoms, medicalHistory) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are an AI medical assistant. Based on the following symptoms and medical history, provide potential diagnostic recommendations for a doctor to review:" },
+      { role: "user", content: `Symptoms: ${symptoms}\nMedical History: ${medicalHistory}` }
+    ],
+  });
+  return response.choices[0].message.content.trim();
+}
+
 // Patient routes
 router.post('/patients', async (req, res) => {
   try {
     console.log('Received patient data:', req.body);
     const patient = new Patient(req.body);
-    
+
+    // Translate if not in English
+    let translatedChiefComplaint = patient.chiefComplaint;
+    let translatedSymptoms = patient.symptoms;
+    let translatedMedicalHistory = patient.medicalHistory;
+
+    if (!/^[a-zA-Z\s]+$/.test(patient.chiefComplaint)) {
+      translatedChiefComplaint = await translateToEnglish(patient.chiefComplaint);
+      translatedSymptoms = await translateToEnglish(patient.symptoms);
+      translatedMedicalHistory = await translateToEnglish(patient.medicalHistory);
+    }
+
     const params = {
-      Text: `${patient.chiefComplaint} ${patient.symptoms} ${patient.medicalHistory}`
+      Text: `${translatedChiefComplaint} ${translatedSymptoms} ${translatedMedicalHistory}`
     };
-    
+
     console.log('Sending text to AWS Comprehend Medical:', params.Text);
     const command = new DetectEntitiesV2Command(params);
     let analysis;
@@ -38,9 +82,22 @@ router.post('/patients', async (req, res) => {
     const processedAnalysis = processAnalysisResults(analysis);
     
     patient.aiAnalysis = processedAnalysis;
+
+    // Get diagnostic recommendations
+    const diagnosticRecommendations = await getDiagnosticRecommendations(translatedSymptoms, translatedMedicalHistory);
+
     await patient.save();
-    
-    res.status(201).json({ patient, analysis: processedAnalysis });
+
+    res.status(201).json({ 
+      patient, 
+      analysis: processedAnalysis, 
+      diagnosticRecommendations,
+      translated: {
+        chiefComplaint: translatedChiefComplaint,
+        symptoms: translatedSymptoms,
+        medicalHistory: translatedMedicalHistory
+      }
+    });
   } catch (error) {
     console.error('Error creating patient or performing analysis:', error);
     if (error.name === 'ValidationError') {

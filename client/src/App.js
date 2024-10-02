@@ -6,6 +6,8 @@ import './styles/App.css';
 
 function App() {
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [diagnosticRecommendations, setDiagnosticRecommendations] = useState(null);
+  const [translated, setTranslated] = useState(null);
   const [showPatientForm, setShowPatientForm] = useState(false);
 
   const handlePatientSubmit = async (data) => {
@@ -24,9 +26,10 @@ function App() {
 
       const result = await response.json();
       setAnalysisResult(result.analysis);
+      setDiagnosticRecommendations(result.diagnosticRecommendations);
+      setTranslated(result.translated);
     } catch (error) {
       console.error('Error submitting patient data:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -38,7 +41,13 @@ function App() {
       ) : (
         <>
           <PatientForm onSubmit={handlePatientSubmit} />
-          {analysisResult && <AIAnalysisResults analysis={analysisResult} />}
+          {analysisResult && (
+            <AIAnalysisResults 
+              analysis={analysisResult} 
+              diagnosticRecommendations={diagnosticRecommendations}
+              translated={translated}
+            />
+          )}
         </>
       )}
     </div>

@@ -31,9 +31,10 @@ const PatientForm = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="patient-form">
+      <h2>Patient Information</h2>
       <div className="form-group">
-        <label htmlFor="name">Patient Name:</label>
+        <label htmlFor="name">Name:</label>
         <input
           type="text"
           id="name"
@@ -43,7 +44,6 @@ const PatientForm = ({ onSubmit }) => {
           required
         />
       </div>
-
       <div className="form-group">
         <label htmlFor="dateOfBirth">Date of Birth:</label>
         <input
@@ -55,10 +55,10 @@ const PatientForm = ({ onSubmit }) => {
           required
         />
       </div>
-
       <div className="form-group">
         <label htmlFor="chiefComplaint">Chief Complaint:</label>
-        <textarea
+        <input
+          type="text"
           id="chiefComplaint"
           name="chiefComplaint"
           value={formData.chiefComplaint}
@@ -66,7 +66,6 @@ const PatientForm = ({ onSubmit }) => {
           required
         />
       </div>
-
       <div className="form-group">
         <label htmlFor="symptoms">Symptoms:</label>
         <textarea
@@ -74,9 +73,9 @@ const PatientForm = ({ onSubmit }) => {
           name="symptoms"
           value={formData.symptoms}
           onChange={handleChange}
+          required
         />
       </div>
-
       <div className="form-group">
         <label htmlFor="medicalHistory">Medical History:</label>
         <textarea
@@ -84,12 +83,14 @@ const PatientForm = ({ onSubmit }) => {
           name="medicalHistory"
           value={formData.medicalHistory}
           onChange={handleChange}
+          required
         />
       </div>
-
-      <button type="button" onClick={fillRandomData}>Fill Random Data</button>
-      <button type="button" onClick={fillAndSubmitRandomData}>Fill and Submit Random Data</button>
-      <button type="submit">Submit</button>
+      <div className="form-actions">
+        <button type="submit" className="submit-btn">Submit</button>
+        <button type="button" onClick={fillRandomData} className="fill-btn">Fill Random Data</button>
+        <button type="button" onClick={fillAndSubmitRandomData} className="fill-submit-btn">Fill and Submit Random Data</button>
+      </div>
     </form>
   );
 };

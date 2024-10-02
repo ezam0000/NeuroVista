@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Patient = require('../models/Patient');
 const { ComprehendMedicalClient, DetectEntitiesV2Command } = require("@aws-sdk/client-comprehendmedical");
-const { defaultProvider } = require("@aws-sdk/credential-provider-node");
+
+console.log('AWS Access Key ID:', process.env.AWS_ACCESS_KEY_ID ? 'Set' : 'Not set');
+console.log('AWS Secret Access Key:', process.env.AWS_SECRET_ACCESS_KEY ? 'Set' : 'Not set');
 
 const client = new ComprehendMedicalClient({
   region: "us-east-1",
@@ -24,9 +26,15 @@ router.post('/patients', async (req, res) => {
     
     console.log('Sending text to AWS Comprehend Medical:', params.Text);
     const command = new DetectEntitiesV2Command(params);
-    const analysis = await client.send(command);
+    let analysis;
+    try {
+      analysis = await client.send(command);
+    } catch (awsError) {
+      console.error('AWS Comprehend Medical Error:', awsError);
+      throw awsError;
+    }
     
-    console.log('Received analysis from AWS Comprehend Medical:', analysis);
+    console.log('Received analysis from AWS Comprehend Medical:', JSON.stringify(analysis, null, 2));
     const processedAnalysis = processAnalysisResults(analysis);
     
     patient.aiAnalysis = processedAnalysis;
@@ -35,6 +43,9 @@ router.post('/patients', async (req, res) => {
     res.status(201).json({ patient, analysis: processedAnalysis });
   } catch (error) {
     console.error('Error creating patient or performing analysis:', error);
+    if (error.name === 'ValidationError') {
+      console.error('Validation error details:', JSON.stringify(error.errors, null, 2));
+    }
     res.status(500).json({ error: 'An error occurred while processing the patient data', details: error.message });
   }
 });
@@ -69,11 +80,13 @@ function processAnalysisResults(analysis) {
     medications: [],
     tests: [],
     anatomy: [],
-    timeExpressions: []
+    timeExpressions: [],
+    protectedHealthInformation: [],
+    behavioralEnvironmentalSocial: []
   };
 
   analysis.Entities.forEach(entity => {
-    const item = {
+    const processedEntity = {
       id: entity.Id,
       text: entity.Text,
       category: entity.Category,
@@ -81,32 +94,46 @@ function processAnalysisResults(analysis) {
       score: entity.Score,
       beginOffset: entity.BeginOffset,
       endOffset: entity.EndOffset,
-      traits: entity.Traits ? entity.Traits.map(trait => ({ name: trait.Name, score: trait.Score })) : [],
+      traits: entity.Traits ? entity.Traits.map(trait => ({
+        name: trait.Name,
+        score: trait.Score
+      })) : [],
       attributes: entity.Attributes ? entity.Attributes.map(attr => ({
         type: attr.Type,
         score: attr.Score,
+        relationshipScore: attr.RelationshipScore,
+        relationshipType: attr.RelationshipType,
+        id: attr.Id,
         text: attr.Text,
-        beginOffset: attr.BeginOffset,
-        endOffset: attr.EndOffset
+        category: attr.Category,
+        traits: attr.Traits ? attr.Traits.map(trait => ({
+          name: trait.Name,
+          score: trait.Score
+        })) : []
       })) : []
     };
 
     switch (entity.Category) {
       case 'MEDICAL_CONDITION':
-        processedResults.medicalConditions.push(item);
+        processedResults.medicalConditions.push(processedEntity);
         break;
       case 'MEDICATION':
-        processedResults.medications.push(item);
+        processedResults.medications.push(processedEntity);
         break;
       case 'TEST_TREATMENT_PROCEDURE':
-        processedResults.tests.push(item);
+        processedResults.tests.push(processedEntity);
         break;
       case 'ANATOMY':
-        processedResults.anatomy.push(item);
+        processedResults.anatomy.push(processedEntity);
         break;
       case 'TIME_EXPRESSION':
-        processedResults.timeExpressions.push(item);
+        processedResults.timeExpressions.push(processedEntity);
         break;
+      case 'PROTECTED_HEALTH_INFORMATION':
+        processedResults.protectedHealthInformation.push(processedEntity);
+        break;
+      default:
+        processedResults.behavioralEnvironmentalSocial.push(processedEntity);
     }
   });
 

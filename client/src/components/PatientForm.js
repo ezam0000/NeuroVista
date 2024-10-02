@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { generateRandomPatient } from '../utils';
 import '../styles/PatientForm.css';
 
-function PatientForm({ onSubmit }) {
-  const [patientData, setPatientData] = useState({
+const PatientForm = ({ onSubmit }) => {
+  const [formData, setFormData] = useState({
     name: '',
     dateOfBirth: '',
     chiefComplaint: '',
@@ -10,91 +11,87 @@ function PatientForm({ onSubmit }) {
     medicalHistory: ''
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setPatientData({ ...patientData, [name]: value });
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch('/api/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patientData),
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      onSubmit(data);
-    } catch (error) {
-      console.error('Error saving patient:', error);
-    }
+    onSubmit(formData);
+  };
+
+  const fillRandomData = () => {
+    setFormData(generateRandomPatient());
+  };
+
+  const fillAndSubmitRandomData = () => {
+    const randomData = generateRandomPatient();
+    setFormData(randomData);
+    onSubmit(randomData);
   };
 
   return (
-    <div className="patient-form-container">
-      <form onSubmit={handleSubmit} className="patient-form">
-        <div className="form-group">
-          <label htmlFor="name">Patient Name:</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={patientData.name}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label htmlFor="name">Patient Name:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="dateOfBirth">Date of Birth:</label>
-          <input
-            type="date"
-            id="dateOfBirth"
-            name="dateOfBirth"
-            value={patientData.dateOfBirth}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+      <div className="form-group">
+        <label htmlFor="dateOfBirth">Date of Birth:</label>
+        <input
+          type="date"
+          id="dateOfBirth"
+          name="dateOfBirth"
+          value={formData.dateOfBirth}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="chiefComplaint">Chief Complaint:</label>
-          <textarea
-            id="chiefComplaint"
-            name="chiefComplaint"
-            value={patientData.chiefComplaint}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+      <div className="form-group">
+        <label htmlFor="chiefComplaint">Chief Complaint:</label>
+        <textarea
+          id="chiefComplaint"
+          name="chiefComplaint"
+          value={formData.chiefComplaint}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="symptoms">Symptoms:</label>
-          <textarea
-            id="symptoms"
-            name="symptoms"
-            value={patientData.symptoms}
-            onChange={handleInputChange}
-          />
-        </div>
+      <div className="form-group">
+        <label htmlFor="symptoms">Symptoms:</label>
+        <textarea
+          id="symptoms"
+          name="symptoms"
+          value={formData.symptoms}
+          onChange={handleChange}
+        />
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="medicalHistory">Medical History:</label>
-          <textarea
-            id="medicalHistory"
-            name="medicalHistory"
-            value={patientData.medicalHistory}
-            onChange={handleInputChange}
-          />
-        </div>
+      <div className="form-group">
+        <label htmlFor="medicalHistory">Medical History:</label>
+        <textarea
+          id="medicalHistory"
+          name="medicalHistory"
+          value={formData.medicalHistory}
+          onChange={handleChange}
+        />
+      </div>
 
-        <button type="submit" className="submit-button">Submit Patient Data</button>
-      </form>
-    </div>
+      <button type="button" onClick={fillRandomData}>Fill Random Data</button>
+      <button type="button" onClick={fillAndSubmitRandomData}>Fill and Submit Random Data</button>
+      <button type="submit">Submit</button>
+    </form>
   );
-}
+};
 
-export { PatientForm };
+export default PatientForm;

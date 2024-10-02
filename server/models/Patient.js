@@ -1,22 +1,27 @@
 const mongoose = require('mongoose');
 
 const EntitySchema = new mongoose.Schema({
-  id: Number,
-  text: String,
-  category: String,
-  type: String,
-  score: Number,
-  beginOffset: Number,
-  endOffset: Number,
-  traits: [{ name: String, score: Number }],
-  attributes: [{
-    type: String,
-    score: Number,
-    text: String,
-    beginOffset: Number,
-    endOffset: Number
+  Id: Number,
+  Text: String,
+  Category: String,
+  Type: String,
+  Score: Number,
+  BeginOffset: Number,
+  EndOffset: Number,
+  Traits: [{ Name: String, Score: Number }],
+  Attributes: [{
+    Type: String,
+    Score: Number,
+    RelationshipScore: Number,
+    RelationshipType: String,
+    Id: Number,
+    BeginOffset: Number,
+    EndOffset: Number,
+    Text: String,
+    Category: String,
+    Traits: [{ Name: String, Score: Number }]
   }]
-});
+}, { _id: false, strict: false });
 
 const PatientSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -29,7 +34,9 @@ const PatientSchema = new mongoose.Schema({
     medications: [EntitySchema],
     tests: [EntitySchema],
     anatomy: [EntitySchema],
-    timeExpressions: [EntitySchema]
+    timeExpressions: [EntitySchema],
+    protectedHealthInformation: [EntitySchema],
+    behavioralEnvironmentalSocial: [EntitySchema]
   }
 });
 

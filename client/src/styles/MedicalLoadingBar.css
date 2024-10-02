@@ -1,0 +1,33 @@
+.medical-loading-container {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .medical-loading-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .medical-loading-progress {
+    width: 0%;
+    height: 100%;
+    background-color: #4caf50;
+    position: absolute;
+    animation: loading 2s infinite ease-in-out;
+  }
+  
+  @keyframes loading {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+  
+  .medical-loading-container p {
+    margin-top: 10px;
+    color: #333;
+    font-weight: bold;
+  }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { generateRandomPatient } from '../utils';
 import '../styles/PatientForm.css';
+import MedicalLoadingBar from './MedicalLoadingBar';
 
 const PatientForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -10,24 +11,29 @@ const PatientForm = ({ onSubmit }) => {
     symptoms: '',
     medicalHistory: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    setIsSubmitting(true);
+    await onSubmit(formData);
+    setIsSubmitting(false);
   };
 
   const fillRandomData = () => {
     setFormData(generateRandomPatient());
   };
 
-  const fillAndSubmitRandomData = () => {
+  const fillAndSubmitRandomData = async () => {
     const randomData = generateRandomPatient();
     setFormData(randomData);
-    onSubmit(randomData);
+    setIsSubmitting(true);
+    await onSubmit(randomData);
+    setIsSubmitting(false);
   };
 
   return (
@@ -87,10 +93,11 @@ const PatientForm = ({ onSubmit }) => {
         />
       </div>
       <div className="form-actions">
-        <button type="submit" className="submit-btn">Submit</button>
-        <button type="button" onClick={fillRandomData} className="fill-btn">Fill Random Data</button>
-        <button type="button" onClick={fillAndSubmitRandomData} className="fill-submit-btn">Fill and Submit Random Data</button>
+        <button type="submit" className="submit-btn" disabled={isSubmitting}>Submit</button>
+        <button type="button" onClick={fillRandomData} className="fill-btn" disabled={isSubmitting}>Fill Random Data</button>
+        <button type="button" onClick={fillAndSubmitRandomData} className="fill-submit-btn" disabled={isSubmitting}>Fill and Submit Random Data</button>
       </div>
+      {isSubmitting && <MedicalLoadingBar />}
     </form>
   );
 };

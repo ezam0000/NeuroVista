@@ -30,16 +30,38 @@ const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) 
     </div>
   );
 
+  const renderDiagnosticRecommendations = () => {
+    if (!diagnosticRecommendations) return null;
+
+    const recommendations = diagnosticRecommendations.split('\n\n');
+    const intro = recommendations.shift();
+    const footer = recommendations.pop();
+
+    return (
+      <div className="diagnostic-recommendations">
+        <h3>Diagnostic Recommendations</h3>
+        <p className="recommendation-intro">{intro}</p>
+        <ol className="recommendation-list">
+          {recommendations.map((rec, index) => {
+            const [title, ...description] = rec.split(':');
+            return (
+              <li key={index} className="recommendation-item">
+                <h4>{title.trim()}</h4>
+                <p>{description.join(':').trim()}</p>
+              </li>
+            );
+          })}
+        </ol>
+        {footer && <p className="recommendation-footer">{footer}</p>}
+      </div>
+    );
+  };
+
   return (
     <div className="ai-analysis-results">
       <h2>AI Analysis Results</h2>
       
-      {diagnosticRecommendations && (
-        <div className="diagnostic-recommendations">
-          <h3>Diagnostic Recommendations</h3>
-          <p>{diagnosticRecommendations}</p>
-        </div>
-      )}
+      {renderDiagnosticRecommendations()}
 
       {translated && (
         <div className="translation-results">

@@ -91,4 +91,51 @@ describe('API Routes', () => {
     expect(res.body.length).toBeGreaterThan(0);
     expect(Array.isArray(res.body)).toBeTruthy();
   });
+
+  test('POST /api/patients should create a new patient with full analysis', async () => {
+    const newPatient = {
+      name: 'Jane Smith',
+      dateOfBirth: '1995-05-05',
+      chiefComplaint: 'Severe headache',
+      symptoms: 'Nausea, sensitivity to light',
+      medicalHistory: 'No significant history'
+    };
+
+    try {
+      const res = await request(app)
+        .post('/api/patients')
+        .send(newPatient);
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.patient).toHaveProperty('name', 'Jane Smith');
+      expect(new Date(res.body.patient.dateOfBirth)).toEqual(new Date(newPatient.dateOfBirth));
+
+      // Check for AI analysis
+      expect(res.body.patient.aiAnalysis).toBeDefined();
+      expect(res.body.patient.aiAnalysis.medicalConditions).toBeDefined();
+      expect(res.body.patient.aiAnalysis.medications).toBeDefined();
+      expect(res.body.patient.aiAnalysis.tests).toBeDefined();
+      expect(res.body.patient.aiAnalysis.anatomy).toBeDefined();
+      expect(res.body.patient.aiAnalysis.timeExpressions).toBeDefined();
+
+      // Check for diagnostic recommendations
+      expect(res.body.patient.diagnosticRecommendations).toBeDefined();
+
+      // Check for translated information
+      expect(res.body.patient.translatedInfo).toBeDefined();
+      expect(res.body.patient.translatedInfo.chiefComplaint).toBeDefined();
+      expect(res.body.patient.translatedInfo.symptoms).toBeDefined();
+      expect(res.body.patient.translatedInfo.medicalHistory).toBeDefined();
+
+      // Verify in the database
+      const savedPatient = await Patient.findOne({ name: 'Jane Smith' });
+      expect(savedPatient).toBeDefined();
+      expect(savedPatient.aiAnalysis).toBeDefined();
+      expect(savedPatient.diagnosticRecommendations).toBeDefined();
+      expect(savedPatient.translatedInfo).toBeDefined();
+    } catch (error) {
+      console.error('Error in POST test:', error);
+      throw error;
+    }
+  });
 });

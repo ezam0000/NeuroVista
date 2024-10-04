@@ -86,6 +86,15 @@ router.post('/patients', async (req, res) => {
     // Get diagnostic recommendations
     const diagnosticRecommendations = await getDiagnosticRecommendations(translatedSymptoms, translatedMedicalHistory);
 
+    // Save all the analysis data
+    patient.aiAnalysis = processedAnalysis;
+    patient.diagnosticRecommendations = diagnosticRecommendations;
+    patient.translatedInfo = {
+      chiefComplaint: translatedChiefComplaint,
+      symptoms: translatedSymptoms,
+      medicalHistory: translatedMedicalHistory
+    };
+
     await patient.save();
 
     res.status(201).json({ 

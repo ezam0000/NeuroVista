@@ -37,6 +37,12 @@ const PatientSchema = new mongoose.Schema({
     timeExpressions: [EntitySchema],
     protectedHealthInformation: [EntitySchema],
     behavioralEnvironmentalSocial: [EntitySchema]
+  },
+  diagnosticRecommendations: { type: String },
+  translatedInfo: {
+    chiefComplaint: { type: String },
+    symptoms: { type: String },
+    medicalHistory: { type: String }
   }
 });
 

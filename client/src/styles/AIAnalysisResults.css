@@ -5,6 +5,10 @@
     padding: 20px;
 }
 
+.ai-analysis-results p {
+    text-align: justify;
+}
+
 .results-title {
     text-align: center;
     color: #333;

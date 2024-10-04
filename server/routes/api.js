@@ -123,11 +123,20 @@ router.get('/patients', async (req, res) => {
 // New route for AI analysis
 router.post('/analyze', async (req, res) => {
   try {
-    const analysis = await performAIAnalysis(req.body);
-    res.json(analysis);
+    const patientInfo = req.body;
+    const amazonResults = await analyzeText(patientInfo);
+    const processedResults = processAnalysisResults(amazonResults);
+    
+    const openAIPrompt = prepareOpenAIPrompt(patientInfo, processedResults);
+    const openAIResponse = await generateOpenAIResponse(openAIPrompt);
+    
+    res.json({
+      amazonResults: processedResults,
+      diagnosticRecommendations: openAIResponse
+    });
   } catch (error) {
-    console.error('Error performing AI analysis:', error);
-    res.status(500).json({ error: 'An error occurred while performing AI analysis' });
+    console.error('Error in /analyze route:', error);
+    res.status(500).json({ error: 'An error occurred during analysis' });
   }
 });
 
@@ -195,6 +204,37 @@ function processAnalysisResults(analysis) {
   });
 
   return processedResults;
+}
+
+function prepareOpenAIPrompt(patientInfo, amazonResults) {
+  let prompt = `Based on the following patient information and Amazon Comprehend Medical analysis results, provide a detailed diagnostic recommendation:\n\n`;
+  prompt += `Patient Information:\n`;
+  prompt += `Chief Complaint: ${patientInfo.chiefComplaint}\n`;
+  prompt += `Symptoms: ${patientInfo.symptoms}\n`;
+  prompt += `Medical History: ${patientInfo.medicalHistory}\n\n`;
+  
+  prompt += `Amazon Comprehend Medical Analysis:\n`;
+  
+  const entityTypes = ['medicalConditions', 'medications', 'tests', 'anatomy', 'timeExpressions'];
+  
+  entityTypes.forEach(type => {
+    if (amazonResults[type] && amazonResults[type].length > 0) {
+      prompt += `${type.charAt(0).toUpperCase() + type.slice(1)}:\n`;
+      amazonResults[type].forEach(entity => {
+        prompt += `- ${entity.text} (Type: ${entity.type}, Score: ${entity.score.toFixed(2)})\n`;
+        if (entity.traits && entity.traits.length > 0) {
+          entity.traits.forEach(trait => {
+            prompt += `  - ${trait.name}: ${trait.score.toFixed(2)}\n`;
+          });
+        }
+      });
+      prompt += '\n';
+    }
+  });
+  
+  prompt += `Based on this information, provide a detailed diagnostic recommendation, including potential conditions to consider, suggested tests or procedures, and any additional information that might be relevant for the healthcare provider.`;
+  
+  return prompt;
 }
 
 module.exports = router;

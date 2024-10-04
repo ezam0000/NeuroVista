@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/AIAnalysisResults.css';
+import '../styles/AIAnalysisResults.css';
 
 const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) => {
   const renderEntities = (entities, title) => (

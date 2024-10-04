@@ -190,3 +190,6 @@ Thumbs.db
 
 # Server-specific ignores (if needed)
 /server/.env
+
+en_DocDocs.md
+es_DocDoc.md

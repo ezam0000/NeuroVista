@@ -91,27 +91,62 @@ button:hover {
 .form-actions {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 20px;
 }
 
-.submit-btn,
-.fill-btn,
-.fill-submit-btn {
+.fill-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
   padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
   transition: background-color 0.3s ease;
+}
+
+.fill-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.submit-btn.ai-powered {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn.ai-powered:hover {
+  background-color: #357abd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.submit-btn.ai-powered span {
+  margin-right: 8px;
+}
+
+.submit-btn.ai-powered .ai-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.submit-btn.ai-powered:disabled {
+  background-color: #b0b0b0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .submit-btn {
   background-color: #007bff;
-  color: #ffffff;
-}
-
-.fill-btn {
-  background-color: #6c757d;
   color: #ffffff;
 }
 
@@ -124,4 +159,26 @@ button:hover {
 .fill-btn:hover,
 .fill-submit-btn:hover {
   opacity: 0.9;
+}
+
+.generate-sample-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-weight: 500;
+}
+
+.generate-sample-btn:hover {
+  background-color: #e0e0e0;
+  color: #1a1a1a;
+}
+
+.generate-sample-btn:disabled {
+  background-color: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
 }

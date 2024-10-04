@@ -1,104 +1,108 @@
 .ai-analysis-results {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.ai-analysis-results h2 {
-    color: #343a40;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
-}
-
-.diagnostic-recommendations, .translation-results, .entity-group {
-    background-color: #ffffff;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.diagnostic-recommendations h3, .translation-results h3, .entity-group h3 {
-    color: #007bff;
-    margin-bottom: 10px;
-}
-
-.entity-group ul {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.entity-group li {
-    background-color: #f1f3f5;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    padding: 10px;
-    margin-bottom: 5px;
-}
-
-.entity-group li strong {
-    color: #495057;
-}
-
-.entity-group li ul {
-    margin-top: 5px;
-    padding-left: 20px;
-}
-
-.entity-group li ul li {
-    background-color: #ffffff;
-    border: none;
-    padding: 2px 0;
-}
-
-.diagnostic-recommendations {
-    background-color: #e6f3ff;
-    border-left: 4px solid #007bff;
-    padding: 20px;
+.results-title {
+    text-align: center;
+    color: #333;
     margin-bottom: 30px;
 }
 
-.recommendation-intro {
-    font-style: italic;
-    margin-bottom: 20px;
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
-.recommendation-list {
-    padding-left: 20px;
-}
-
-.recommendation-item {
+.entity-tile, .diagnostic-tile, .translation-tile {
     background-color: #ffffff;
-    border: 1px solid #d1e7ff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.recommendation-item h4 {
-    color: #0056b3;
+.entity-tile:hover, .diagnostic-tile:hover, .translation-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+h3 i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.entity-list, .recommendation-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.entity-item, .recommendation-item {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
     margin-bottom: 10px;
 }
 
-.recommendation-footer {
+.entity-text {
     font-weight: bold;
-    margin-top: 20px;
+    color: #2c3e50;
 }
 
-.amazon-comprehend-results {
-    background-color: #f0f8ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 30px;
+.entity-type, .entity-score {
+    display: inline-block;
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-left: 10px;
 }
 
-.amazon-comprehend-results h3 {
-    color: #0056b3;
+.trait-list {
+    list-style-type: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.trait-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #34495e;
+}
+
+.no-entities {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.recommendation-intro, .recommendation-footer {
+    color: #34495e;
+    font-style: italic;
     margin-bottom: 15px;
+}
+
+.recommendation-item h4 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.recommendation-item p {
+    color: #34495e;
+}
+
+.translation-tile p {
+    margin-bottom: 10px;
+}
+
+.translation-tile strong {
+    color: #2c3e50;
 }

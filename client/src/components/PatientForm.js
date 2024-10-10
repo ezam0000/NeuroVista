@@ -87,14 +87,30 @@ const PatientForm = ({ onSubmit }) => {
         />
       </div>
       <div className="form-actions">
-        <button type="button" onClick={fillRandomData} className="generate-sample-btn" disabled={isSubmitting}>
+        <button
+          type="button"
+          onClick={fillRandomData}
+          className="btn btn-secondary"
+          disabled={isSubmitting}
+        >
           Generate Sample Patient
         </button>
-        <button type="submit" className="submit-btn ai-powered" disabled={isSubmitting}>
-          <span>Submit</span>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="ai-icon">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5l-4 4 4 4v-3h6v-2h-6zm8-9l-4-4v3H9v2h6v3l4-4z"/>
-          </svg>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+          {!isSubmitting && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="btn-icon"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5l-4 4 4 4v-3h6v-2h-6zm8-9l-4-4v3H9v2h6v3l4-4z" />
+            </svg>
+          )}
         </button>
       </div>
       {isSubmitting && <MedicalLoadingBar />}

@@ -53,15 +53,21 @@ router.post('/patients', async (req, res) => {
     console.log('Received patient data:', req.body);
     const patient = new Patient(req.body);
 
-    // Translate if not in English
     let translatedChiefComplaint = patient.chiefComplaint;
     let translatedSymptoms = patient.symptoms;
     let translatedMedicalHistory = patient.medicalHistory;
+    let originalChiefComplaint = patient.chiefComplaint;
+    let originalSymptoms = patient.symptoms;
+    let originalMedicalHistory = patient.medicalHistory;
 
     if (!/^[a-zA-Z\s]+$/.test(patient.chiefComplaint)) {
       translatedChiefComplaint = await translateToEnglish(patient.chiefComplaint);
       translatedSymptoms = await translateToEnglish(patient.symptoms);
       translatedMedicalHistory = await translateToEnglish(patient.medicalHistory);
+    } else {
+      originalChiefComplaint = await translateToLanguage(patient.chiefComplaint, 'es');
+      originalSymptoms = await translateToLanguage(patient.symptoms, 'es');
+      originalMedicalHistory = await translateToLanguage(patient.medicalHistory, 'es');
     }
 
     const params = {
@@ -92,7 +98,10 @@ router.post('/patients', async (req, res) => {
     patient.translatedInfo = {
       chiefComplaint: translatedChiefComplaint,
       symptoms: translatedSymptoms,
-      medicalHistory: translatedMedicalHistory
+      medicalHistory: translatedMedicalHistory,
+      originalChiefComplaint: originalChiefComplaint,
+      originalSymptoms: originalSymptoms,
+      originalMedicalHistory: originalMedicalHistory
     };
 
     await patient.save();
@@ -104,7 +113,10 @@ router.post('/patients', async (req, res) => {
       translated: {
         chiefComplaint: translatedChiefComplaint,
         symptoms: translatedSymptoms,
-        medicalHistory: translatedMedicalHistory
+        medicalHistory: translatedMedicalHistory,
+        originalChiefComplaint: originalChiefComplaint,
+        originalSymptoms: originalSymptoms,
+        originalMedicalHistory: originalMedicalHistory
       }
     });
   } catch (error) {
@@ -244,6 +256,28 @@ function prepareOpenAIPrompt(patientInfo, amazonResults) {
   prompt += `Based on this information, provide a detailed diagnostic recommendation, including potential conditions to consider, suggested tests or procedures, and any additional information that might be relevant for the healthcare provider.`;
   
   return prompt;
+}
+
+router.post('/translate', async (req, res) => {
+  try {
+    const { text, targetLanguage } = req.body;
+    const translatedText = await translateToLanguage(text, targetLanguage);
+    res.json({ translatedText });
+  } catch (error) {
+    console.error('Translation error:', error);
+    res.status(500).json({ error: 'An error occurred during translation' });
+  }
+});
+
+async function translateToLanguage(text, targetLanguage) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: `You are a medical translator. Translate the following text to ${targetLanguage}:` },
+      { role: "user", content: text }
+    ],
+  });
+  return response.choices[0].message.content.trim();
 }
 
 module.exports = router;

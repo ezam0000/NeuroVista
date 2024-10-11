@@ -1,7 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/AIAnalysisResults.css';
 
 const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) => {
+  const [isSpanish, setIsSpanish] = useState(false);
+  const [translatedDiagnosticRecommendations, setTranslatedDiagnosticRecommendations] = useState('');
+
+  useEffect(() => {
+    if (isSpanish && diagnosticRecommendations) {
+      translateText(diagnosticRecommendations, 'es').then(setTranslatedDiagnosticRecommendations);
+    }
+  }, [isSpanish, diagnosticRecommendations]);
+
+  const toggleLanguage = () => {
+    setIsSpanish(!isSpanish);
+  };
+
+  const translateText = async (text, targetLanguage) => {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, targetLanguage }),
+      });
+      const data = await response.json();
+      return data.translatedText;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  };
+
   const renderEntities = (entities, title, icon) => (
     <div className="entity-tile">
       <h3><i className={`fas ${icon}`}></i> {title}</h3>
@@ -34,13 +64,18 @@ const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) 
   const renderDiagnosticRecommendations = () => {
     if (!diagnosticRecommendations) return null;
 
-    const recommendations = diagnosticRecommendations.split('\n\n');
+    const recommendations = (isSpanish ? translatedDiagnosticRecommendations : diagnosticRecommendations).split('\n\n');
     const intro = recommendations.shift();
     const footer = recommendations.pop();
 
     return (
       <div className="diagnostic-tile">
-        <h3><i className="fas fa-stethoscope"></i> Diagnostic Recommendations</h3>
+        <h3>
+          <i className="fas fa-stethoscope"></i> Diagnostic Recommendations
+          <button onClick={toggleLanguage} className="language-toggle">
+            {isSpanish ? 'Ver en inglés' : 'Ver en español'}
+          </button>
+        </h3>
         <p className="recommendation-intro">{intro}</p>
         <ol className="recommendation-list">
           {recommendations.map((rec, index) => {
@@ -68,9 +103,12 @@ const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) 
         {translated && (
           <div className="translation-tile">
             <h3><i className="fas fa-language"></i> Translated Information</h3>
-            <p><strong>Chief Complaint:</strong> {translated.chiefComplaint}</p>
-            <p><strong>Symptoms:</strong> {translated.symptoms}</p>
-            <p><strong>Medical History:</strong> {translated.medicalHistory}</p>
+            <p><strong>{isSpanish ? 'Queja principal:' : 'Chief Complaint:'}</strong> {isSpanish ? translated.chiefComplaint : translated.originalChiefComplaint}</p>
+            <p><strong>{isSpanish ? 'Síntomas:' : 'Symptoms:'}</strong> {isSpanish ? translated.symptoms : translated.originalSymptoms}</p>
+            <p><strong>{isSpanish ? 'Historia médica:' : 'Medical History:'}</strong> {isSpanish ? translated.medicalHistory : translated.originalMedicalHistory}</p>
+            <button onClick={toggleLanguage} className="language-toggle">
+              {isSpanish ? 'View in English' : 'Ver en español'}
+            </button>
           </div>
         )}
 

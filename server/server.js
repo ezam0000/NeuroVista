@@ -15,9 +15,18 @@ console.log('Connecting to MongoDB with URI:', mongoURI);
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
 })
   .then(() => console.log(`MongoDB Atlas connected to ${process.env.NODE_ENV === 'test' ? 'test' : 'development'} database`))
-  .catch(err => console.error('MongoDB Atlas connection error:', err));
+  .catch(err => {
+    console.error('MongoDB Atlas connection error:', err);
+    console.error('Error details:', JSON.stringify(err, null, 2));
+    console.error('MongoDB URI:', mongoURI); // Be careful not to log sensitive information in production
+  });
+
+// Add this to get more detailed Mongoose logs
+mongoose.set('debug', true);
 
 app.use(express.json());
 

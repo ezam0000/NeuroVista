@@ -1,13 +1,18 @@
+console.log('Starting server...');
+console.log('Current directory:', process.cwd());
+console.log('Files in current directory:', require('fs').readdirSync('.'));
+
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');  // Add this line
+const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Use CORS middleware
-app.use(cors());  // Add this line
+app.use(cors());
 
 // Connect to MongoDB
 const mongoURI = process.env.NODE_ENV === 'test' ? process.env.MONGODB_URI_TEST : process.env.MONGODB_URI;
@@ -25,19 +30,24 @@ mongoose.connect(mongoURI, {
     console.error('MongoDB URI:', mongoURI); // Be careful not to log sensitive information in production
   });
 
-// Add this to get more detailed Mongoose logs
-mongoose.set('debug', true);
-
-app.use(express.json());
-
-// Import and use routes
+// API routes
 const apiRoutes = require('./routes/api');
 app.use('/api', apiRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Increase the server timeout
+app.timeout = 60000; // 60 seconds
+
+app.use(express.json());

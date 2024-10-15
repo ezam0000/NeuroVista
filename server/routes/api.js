@@ -11,13 +11,13 @@ console.log('AWS Secret Access Key:', process.env.AWS_SECRET_ACCESS_KEY ? 'Set' 
 const client = new ComprehendMedicalClient({
   region: "us-east-1",
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID.trim(),
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY.trim(),
   },
 });
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY.replace(/^Bearer\s+/i, '').trim(),
 });
 
 if (!process.env.OPENAI_API_KEY) {
@@ -50,8 +50,32 @@ async function getDiagnosticRecommendations(symptoms, medicalHistory) {
 // Patient routes
 router.post('/patients', async (req, res) => {
   try {
-    console.log('Received patient data:', req.body);
-    const patient = new Patient(req.body);
+    console.log('Received request body:', req.body);
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('Request headers:', req.headers);
+
+    if (!req.body || typeof req.body !== 'object' || Object.keys(req.body).length === 0) {
+      console.error('Invalid or empty request body received');
+      return res.status(400).json({ error: 'Invalid or empty request body' });
+    }
+
+    // Check if required fields are present
+    if (!req.body.name || !req.body.dateOfBirth) {
+      console.error('Missing required fields:', { name: req.body.name, dateOfBirth: req.body.dateOfBirth });
+      return res.status(400).json({ error: 'Name and date of birth are required fields' });
+    }
+
+    const patient = new Patient({
+      name: req.body.name,
+      dateOfBirth: req.body.dateOfBirth,
+      chiefComplaint: req.body.chiefComplaint || '',
+      symptoms: req.body.symptoms || '',
+      medicalHistory: req.body.medicalHistory || ''
+    });
+
+    console.log('Created patient object:', JSON.stringify(patient));
+
+    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY.substring(0, 10) + '...');
 
     let translatedChiefComplaint = patient.chiefComplaint;
     let translatedSymptoms = patient.symptoms;
@@ -60,18 +84,26 @@ router.post('/patients', async (req, res) => {
     let originalSymptoms = patient.symptoms;
     let originalMedicalHistory = patient.medicalHistory;
 
-    if (!/^[a-zA-Z\s]+$/.test(patient.chiefComplaint)) {
-      translatedChiefComplaint = await translateToEnglish(patient.chiefComplaint);
-      translatedSymptoms = await translateToEnglish(patient.symptoms);
-      translatedMedicalHistory = await translateToEnglish(patient.medicalHistory);
-    } else {
-      originalChiefComplaint = await translateToLanguage(patient.chiefComplaint, 'es');
-      originalSymptoms = await translateToLanguage(patient.symptoms, 'es');
-      originalMedicalHistory = await translateToLanguage(patient.medicalHistory, 'es');
+    try {
+      if (patient.chiefComplaint && !/^[a-zA-Z\s]+$/.test(patient.chiefComplaint)) {
+        console.log('Translating to English...');
+        translatedChiefComplaint = await translateToEnglish(patient.chiefComplaint);
+        translatedSymptoms = await translateToEnglish(patient.symptoms);
+        translatedMedicalHistory = await translateToEnglish(patient.medicalHistory);
+      } else if (patient.chiefComplaint) {
+        console.log('Translating to Spanish...');
+        originalChiefComplaint = await translateToLanguage(patient.chiefComplaint, 'es');
+        originalSymptoms = await translateToLanguage(patient.symptoms, 'es');
+        originalMedicalHistory = await translateToLanguage(patient.medicalHistory, 'es');
+      }
+      console.log('Translation completed successfully');
+    } catch (translationError) {
+      console.error('Translation error:', translationError);
+      // Continue with original text
     }
 
     const params = {
-      Text: `${translatedChiefComplaint} ${translatedSymptoms} ${translatedMedicalHistory}`
+      Text: `${translatedChiefComplaint} ${translatedSymptoms} ${translatedMedicalHistory}`.trim()
     };
 
     console.log('Sending text to AWS Comprehend Medical:', params.Text);
@@ -81,7 +113,7 @@ router.post('/patients', async (req, res) => {
       analysis = await client.send(command);
     } catch (awsError) {
       console.error('AWS Comprehend Medical Error:', awsError);
-      throw awsError;
+      return res.status(500).json({ error: 'AWS Comprehend Medical failed', details: awsError.message });
     }
     
     console.log('Received analysis from AWS Comprehend Medical:', JSON.stringify(analysis, null, 2));
@@ -89,12 +121,14 @@ router.post('/patients', async (req, res) => {
     
     patient.aiAnalysis = processedAnalysis;
 
-    // Get diagnostic recommendations
-    const diagnosticRecommendations = await getDiagnosticRecommendations(translatedSymptoms, translatedMedicalHistory);
+    try {
+      const diagnosticRecommendations = await getDiagnosticRecommendations(translatedSymptoms, translatedMedicalHistory);
+      patient.diagnosticRecommendations = diagnosticRecommendations;
+    } catch (recommendationsError) {
+      console.error('Error getting diagnostic recommendations:', recommendationsError);
+      patient.diagnosticRecommendations = 'Unable to generate recommendations at this time.';
+    }
 
-    // Save all the analysis data
-    patient.aiAnalysis = processedAnalysis;
-    patient.diagnosticRecommendations = diagnosticRecommendations;
     patient.translatedInfo = {
       chiefComplaint: translatedChiefComplaint,
       symptoms: translatedSymptoms,
@@ -104,26 +138,24 @@ router.post('/patients', async (req, res) => {
       originalMedicalHistory: originalMedicalHistory
     };
 
-    await patient.save();
-
-    res.status(201).json({ 
-      patient, 
-      analysis: processedAnalysis, 
-      diagnosticRecommendations,
-      translated: {
-        chiefComplaint: translatedChiefComplaint,
-        symptoms: translatedSymptoms,
-        medicalHistory: translatedMedicalHistory,
-        originalChiefComplaint: originalChiefComplaint,
-        originalSymptoms: originalSymptoms,
-        originalMedicalHistory: originalMedicalHistory
+    try {
+      const savedPatient = await patient.save({ maxTimeMS: 60000 });
+      console.log('Patient saved successfully:', savedPatient._id);
+      res.status(201).json({ 
+        patient: savedPatient, 
+        analysis: processedAnalysis, 
+        diagnosticRecommendations: savedPatient.diagnosticRecommendations,
+        translated: savedPatient.translatedInfo
+      });
+    } catch (saveError) {
+      console.error('Error saving patient to database:', saveError);
+      if (saveError.name === 'MongooseError' && saveError.message.includes('buffering timed out')) {
+        return res.status(503).json({ error: 'Database connection timed out', details: 'Please try again later' });
       }
-    });
+      return res.status(500).json({ error: 'Failed to save patient', details: saveError.message });
+    }
   } catch (error) {
     console.error('Error creating patient or performing analysis:', error);
-    if (error.name === 'ValidationError') {
-      console.error('Validation error details:', JSON.stringify(error.errors, null, 2));
-    }
     res.status(500).json({ error: 'An error occurred while processing the patient data', details: error.message });
   }
 });
@@ -270,14 +302,23 @@ router.post('/translate', async (req, res) => {
 });
 
 async function translateToLanguage(text, targetLanguage) {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: `You are a medical translator. Translate the following text to ${targetLanguage}:` },
-      { role: "user", content: text }
-    ],
-  });
-  return response.choices[0].message.content.trim();
+  if (!text || text.trim() === '') {
+    console.log(`Attempted to translate empty or null text to ${targetLanguage}`);
+    return '';
+  }
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: `You are a medical translator. Translate the following text to ${targetLanguage}:` },
+        { role: "user", content: text }
+      ],
+    });
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('Translation error:', error);
+    throw new Error(`Translation failed: ${error.message}`);
+  }
 }
 
 module.exports = router;

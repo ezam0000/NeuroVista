@@ -1,0 +1,12 @@
+{
+    "name": "neurovista",
+    "version": "1.0.0",
+    "description": "NeuroVista: AI-Powered Health Diagnostic Assistant",
+    "scripts": {
+      "start": "cd server && npm start",
+      "heroku-postbuild": "cd client && npm install && npm run build"
+    },
+    "engines": {
+      "node": "18.20.4"
+    }
+  }

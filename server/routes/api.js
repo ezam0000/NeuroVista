@@ -38,7 +38,7 @@ async function translateToEnglish(text) {
 
 async function getDiagnosticRecommendations(symptoms, medicalHistory) {
   const response = await openai.chat.completions.create({
-    model: "o1-mini",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: "You are an AI medical assistant. Based on the following symptoms and medical history, provide potential diagnostic recommendations for a doctor to review:" },
       { role: "user", content: `Symptoms: ${symptoms}\nMedical History: ${medicalHistory}` }

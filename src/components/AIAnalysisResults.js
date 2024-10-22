@@ -96,7 +96,6 @@ const AIAnalysisResults = ({ analysis, diagnosticRecommendations, translated }) 
   return (
     <div className="ai-analysis-results">
       <h2 className="results-title">AI Analysis Results</h2>
-      
       <div className="results-grid">
         {renderDiagnosticRecommendations()}
 
